@@ -2,89 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Send Message to n8n Webhook</title>
+  <title>n8n Messaging</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f1f1f1;
-      padding: 2em;
-    }
-
-    form {
-      background-color: #fff;
-      padding: 2em;
-      max-width: 500px;
-      margin: auto;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      text-align: center;
-    }
-
-    textarea, button {
-      width: 100%;
-      padding: 1em;
-      margin-top: 1em;
-      font-size: 1em;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #status {
-      margin-top: 1em;
-      text-align: center;
-    }
+    body { font-family: sans-serif; padding: 2em; background: #f0f0f0; }
+    form { max-width: 500px; background: white; padding: 1.5em; border-radius: 10px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    textarea, button { width: 100%; margin-top: 1em; padding: 0.8em; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: #007BFF; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    #response { margin-top: 1em; font-weight: bold; text-align: center; }
   </style>
 </head>
 <body>
 
-  <form id="n8nForm">
-    <h2>Send Message to n8n</h2>
-    <textarea id="message" rows="5" placeholder="Enter your message..." required></textarea>
+  <form id="messageForm">
+    <h2>Send a Message to n8n</h2>
+    <textarea id="message" placeholder="Type your message here..." required></textarea>
     <button type="submit">Send</button>
-    <p id="status"></p>
+    <div id="response"></div>
   </form>
 
   <script>
-    const form = document.getElementById('n8nForm');
-    const status = document.getElementById('status');
+    const form = document.getElementById('messageForm');
+    const responseBox = document.getElementById('response');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const message = document.getElementById('message').value;
 
       try {
-        const response = await fetch('https://n8n.nesresponse.org/webhook-test/message', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+        const res = await fetch("https://n8n.nesresponse.org/webhook-test/message", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message })
         });
 
-        if (response.ok) {
-          status.textContent = "✅ Message sent to n8n!";
-          form.reset();
-        } else {
-          status.textContent = "❌ Failed to send. Check your n8n flow.";
-        }
+        const data = await res.json();
+        responseBox.textContent = data.message || "✅ Message sent!";
       } catch (error) {
-        console.error('Error:', error);
-        status.textContent = "❌ Error sending message.";
+        console.error(error);
+        responseBox.textContent = "❌ Error sending message.";
       }
     });
   </script>
