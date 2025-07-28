@@ -1,48 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>n8n Messaging</title>
+  <meta charset="UTF-8" />
+  <title>n8n Chat Interface</title>
   <style>
-    body { font-family: sans-serif; padding: 2em; background: #f0f0f0; }
-    form { max-width: 500px; background: white; padding: 1.5em; border-radius: 10px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    textarea, button { width: 100%; margin-top: 1em; padding: 0.8em; font-size: 1em; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #007BFF; color: white; border: none; cursor: pointer; }
-    button:hover { background: #0056b3; }
-    #response { margin-top: 1em; font-weight: bold; text-align: center; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 2em; }
+    #chatbox {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      border-radius: 10px;
+      padding: 1.5em;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .msg { margin: 0.8em 0; }
+    .user { text-align: right; color: #007bff; }
+    .bot { text-align: left; color: #333; }
+    input[type="text"] {
+      width: 80%;
+      padding: 0.7em;
+      font-size: 1em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 0.7em 1.2em;
+      font-size: 1em;
+      border-radius: 5px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      margin-left: 0.5em;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-  <form id="messageForm">
-    <h2>Send a Message to n8n</h2>
-    <textarea id="message" placeholder="Type your message here..." required></textarea>
-    <button type="submit">Send</button>
-    <div id="response"></div>
-  </form>
+  <div id="chatbox">
+    <div id="messages"></div>
+    <div style="margin-top: 1em;">
+      <input type="text" id="inputMsg" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
 
   <script>
-    const form = document.getElementById('messageForm');
-    const responseBox = document.getElementById('response');
+    async function sendMessage() {
+      const input = document.getElementById('inputMsg');
+      const messagesDiv = document.getElementById('messages');
+      const userMessage = input.value.trim();
+      if (!userMessage) return;
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const message = document.getElementById('message').value;
+      // Add user's message to chat
+      const userDiv = document.createElement('div');
+      userDiv.className = 'msg user';
+      userDiv.textContent = userMessage;
+      messagesDiv.appendChild(userDiv);
+
+      input.value = '';
 
       try {
-        const res = await fetch("https://n8n.nesresponse.org/webhook-test/message", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message })
+        const res = await fetch('https://n8n.nesresponse.org/webhook/ace8f51c-1608-4f15-8a13-473da3ec99a4/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage })
         });
 
         const data = await res.json();
-        responseBox.textContent = data.message || "✅ Message sent!";
-      } catch (error) {
-        console.error(error);
-        responseBox.textContent = "❌ Error sending message.";
+
+        const botDiv = document.createElement('div');
+        botDiv.className = 'msg bot';
+        botDiv.textContent = data.message || '(No response from bot)';
+        messagesDiv.appendChild(botDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      } catch (err) {
+        console.error(err);
+        const errDiv = document.createElement('div');
+        errDiv.className = 'msg bot';
+        errDiv.textContent = '⚠️ Failed to get response.';
+        messagesDiv.appendChild(errDiv);
       }
-    });
+    }
   </script>
 
 </body>
